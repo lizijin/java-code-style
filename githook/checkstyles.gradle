@@ -1,0 +1,38 @@
+apply plugin: 'checkstyle'
+preBuild.dependsOn('checkstyle')
+assemble.dependsOn('lint')
+check.dependsOn('checkstyle')
+
+task checkstyle(type: Checkstyle) {
+    showViolations = true
+    ignoreFailures = false
+    maxWarnings = 0
+    configFile rootProject.file("google-checks.xml")
+    source 'src/main/java'
+    include '**/*.java'
+    exclude '**/gen/**'
+    exclude '**/R.java'
+    exclude '**/BuildConfig.java'
+
+    // empty classpath
+    classpath = files()
+}
+
+tasks.create(name: 'gitExecutableHooks') << {
+    Runtime.getRuntime().exec("chmod -R +x .git/hooks/");
+}
+
+task installGitHooks(type: Copy) {
+    from {new File(rootProject.rootDir, 'pre-commit')}
+    into { new File(rootProject.rootDir, '.git/hooks') }
+}
+gitExecutableHooks.dependsOn installGitHooks
+clean.dependsOn gitExecutableHooks
+//test.dependsOn gitExecutableHooks
+//
+//check.dependsOn gitExecutableHooks
+//gitExecutableHooks
+
+checkstyle {
+    toolVersion = 8.12
+}
